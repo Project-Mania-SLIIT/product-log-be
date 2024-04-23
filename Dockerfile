@@ -16,7 +16,11 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 5000
 
+
 RUN npx prisma generate
 
+# Creates a "dist" folder with the production build
+RUN npm run build
+
 # Command to run the application
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start:prod"]
