@@ -2,11 +2,11 @@ name: CICD
 
 on:
   push:
-    branches: [ dev ]
+    branches: [dev]
 
 jobs:
   build-and-deploy:
-    runs-on: [ ubuntu-latest ]
+    runs-on: [ubuntu-latest]
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           mask-password: 'true'
-          
+
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -34,19 +34,19 @@ jobs:
           # be deployed to ECS.
           docker build -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT    
+          echo "image=$ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ctseTask-revision1.json 
+          task-definition: ctseTask-revision1.json
           container-name: ctse-dev
-          image: ${{ steps.build-image.outputs.image }}    
+          image: ${{ steps.build-image.outputs.image }}
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ctse-service
-          cluster: ctseCluster
+          cluster: DevCluster
           wait-for-service-stability: true
